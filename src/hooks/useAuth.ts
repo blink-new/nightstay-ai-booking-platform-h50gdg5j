@@ -32,17 +32,28 @@ export function useAuth() {
         try {
           // Get full user profile with role information
           const userProfile = await AuthService.getCurrentUserProfile()
-          setAuthState({
-            user: userProfile,
-            isLoading: false,
-            isAuthenticated: true
-          })
+          if (userProfile) {
+            setAuthState({
+              user: userProfile,
+              isLoading: false,
+              isAuthenticated: true
+            })
+          } else {
+            // Profile couldn't be loaded, but user is authenticated
+            // This might happen during profile creation
+            setAuthState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: true
+            })
+          }
         } catch (error) {
           console.error('Error loading user profile:', error)
+          // Keep user authenticated but without profile data
           setAuthState({
             user: null,
             isLoading: false,
-            isAuthenticated: false
+            isAuthenticated: true
           })
         }
       } else {

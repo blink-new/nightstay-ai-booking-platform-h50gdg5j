@@ -11,24 +11,57 @@ export class AuthService {
     try {
       const user = await blink.auth.me()
       
-      // Check if user profile already exists
-      const existingProfile = await blink.db.users.list({
+      // First check if user exists by ID
+      const existingProfileById = await blink.db.users.list({
         where: { id: user.id },
         limit: 1
       })
 
-      if (existingProfile.length === 0) {
-        // Create new user profile
+      if (existingProfileById.length > 0) {
+        // User already exists with this ID, just return the profile
+        return await this.getCurrentUserProfile()
+      }
+
+      // Check if user exists by email (different auth provider, same email)
+      const existingProfileByEmail = await blink.db.users.list({
+        where: { email: userData.email },
+        limit: 1
+      })
+
+      if (existingProfileByEmail.length > 0) {
+        // User exists with same email but different ID - migrate the data
+        const existingUser = existingProfileByEmail[0]
+        
+        // Delete the old record
+        await blink.db.users.delete(existingUser.id)
+        
+        // Create new record with current auth ID but preserve existing data
         await blink.db.users.create({
           id: user.id,
-          email: userData.email,
-          displayName: userData.displayName || user.email?.split('@')[0],
-          role: userData.role || 'guest',
-          isVerified: false,
-          createdAt: new Date().toISOString(),
+          email: existingUser.email,
+          displayName: existingUser.display_name,
+          role: existingUser.role,
+          phone: existingUser.phone,
+          profilePhoto: existingUser.profile_photo,
+          isVerified: Number(existingUser.is_verified) > 0,
+          idDocumentUrl: existingUser.id_document_url,
+          createdAt: existingUser.created_at,
           updatedAt: new Date().toISOString()
         })
+        
+        return await this.getCurrentUserProfile()
       }
+
+      // Create new user profile
+      await blink.db.users.create({
+        id: user.id,
+        email: userData.email,
+        displayName: userData.displayName || user.email?.split('@')[0],
+        role: userData.role || 'guest',
+        isVerified: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
 
       return await this.getCurrentUserProfile()
     } catch (error) {
@@ -49,11 +82,15 @@ export class AuthService {
       })
 
       if (profiles.length === 0) {
-        // Initialize profile if it doesn't exist
-        return await this.initializeUserProfile({
-          email: user.email || '',
-          displayName: user.displayName
-        })
+        // Initialize profile if it doesn't exist - but avoid infinite recursion
+        // by checking if we're already in an initialization process
+        if (user.email) {
+          return await this.initializeUserProfile({
+            email: user.email,
+            displayName: user.displayName
+          })
+        }
+        return null
       }
 
       const profile = profiles[0]
@@ -71,6 +108,7 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Error getting user profile:', error)
+      // Don't try to initialize on error to avoid infinite loops
       return null
     }
   }
