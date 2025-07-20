@@ -107,16 +107,16 @@ class CustomAuthService {
       return {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name || user.firstName,
+        lastName: user.last_name || user.lastName,
         phone: user.phone,
         role: user.role as User['role'],
-        isVerified: Number(user.isVerified) > 0,
-        ageVerified: Number(user.ageVerified) > 0,
-        idDocumentUrl: user.idDocumentUrl,
-        displayName: `${user.firstName} ${user.lastName}`.trim(),
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        isVerified: Number(user.is_verified || user.isVerified) > 0,
+        ageVerified: Number(user.age_verified || user.ageVerified) > 0,
+        idDocumentUrl: user.id_document_url || user.idDocumentUrl,
+        displayName: `${user.first_name || user.firstName} ${user.last_name || user.lastName}`.trim(),
+        createdAt: user.created_at || user.createdAt,
+        updatedAt: user.updated_at || user.updatedAt
       }
     } catch (error) {
       console.error('Error validating token:', error)
@@ -197,16 +197,16 @@ class CustomAuthService {
       this.currentUser = {
         id: newUser.id,
         email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        firstName: newUser.firstName || newUser.first_name,
+        lastName: newUser.lastName || newUser.last_name,
         phone: newUser.phone,
         role: newUser.role as User['role'],
-        isVerified: Number(newUser.isVerified) > 0,
-        ageVerified: Number(newUser.ageVerified) > 0,
-        idDocumentUrl: newUser.idDocumentUrl,
-        displayName: `${newUser.firstName} ${newUser.lastName}`.trim(),
-        createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt
+        isVerified: Number(newUser.isVerified || newUser.is_verified) > 0,
+        ageVerified: Number(newUser.ageVerified || newUser.age_verified) > 0,
+        idDocumentUrl: newUser.idDocumentUrl || newUser.id_document_url,
+        displayName: `${newUser.firstName || newUser.first_name} ${newUser.lastName || newUser.last_name}`.trim(),
+        createdAt: newUser.createdAt || newUser.created_at,
+        updatedAt: newUser.updatedAt || newUser.updated_at
       }
       this.currentToken = token
 
@@ -286,16 +286,16 @@ class CustomAuthService {
       this.currentUser = {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name || user.firstName,
+        lastName: user.last_name || user.lastName,
         phone: user.phone,
         role: user.role as User['role'],
-        isVerified: Number(user.isVerified) > 0,
-        ageVerified: Number(user.ageVerified) > 0,
-        idDocumentUrl: user.idDocumentUrl,
-        displayName: `${user.firstName} ${user.lastName}`.trim(),
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        isVerified: Number(user.is_verified || user.isVerified) > 0,
+        ageVerified: Number(user.age_verified || user.ageVerified) > 0,
+        idDocumentUrl: user.id_document_url || user.idDocumentUrl,
+        displayName: `${user.first_name || user.firstName} ${user.last_name || user.lastName}`.trim(),
+        createdAt: user.created_at || user.createdAt,
+        updatedAt: user.updated_at || user.updatedAt
       }
       this.currentToken = token
 
