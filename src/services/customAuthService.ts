@@ -229,18 +229,21 @@ class CustomAuthService {
 
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
+      console.log('=== SIGNIN DEBUG START ===')
       console.log('SignIn attempt:', data.email)
       
       // Find user by email
+      console.log('Querying database for user...')
       const users = await blink.db.users.list({
         where: { email: data.email },
         limit: 1
       })
 
-      console.log('Found users:', users.length)
+      console.log('Database query result:', users)
+      console.log('Found users count:', users.length)
       
       if (users.length === 0) {
-        console.log('No user found with email:', data.email)
+        console.log('❌ No user found with email:', data.email)
         return {
           success: false,
           message: 'Invalid email or password'
@@ -248,10 +251,19 @@ class CustomAuthService {
       }
 
       const user = users[0]
-      console.log('User found:', user.email, 'Role:', user.role)
+      console.log('✅ User found:', {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isActive: user.is_active || user.isActive,
+        hasPasswordHash: !!(user.password_hash || user.passwordHash)
+      })
 
       // Check if account is active
-      if (Number(user.is_active || user.isActive) === 0) {
+      const isActive = Number(user.is_active || user.isActive || 1)
+      console.log('Account active check:', isActive)
+      if (isActive === 0) {
+        console.log('❌ Account is deactivated')
         return {
           success: false,
           message: 'Account is deactivated. Please contact support.'
@@ -259,41 +271,54 @@ class CustomAuthService {
       }
 
       // Verify password
+      console.log('Verifying password...')
       const passwordHash = await hashPassword(data.password)
+      const storedHash = user.password_hash || user.passwordHash
       console.log('Generated hash:', passwordHash)
-      console.log('Stored hash:', user.password_hash || user.passwordHash)
-      console.log('Password match:', passwordHash === (user.password_hash || user.passwordHash))
+      console.log('Stored hash:', storedHash)
+      console.log('Password match:', passwordHash === storedHash)
       
-      if (passwordHash !== (user.password_hash || user.passwordHash)) {
-        console.log('Password verification failed')
+      if (passwordHash !== storedHash) {
+        console.log('❌ Password verification failed')
         return {
           success: false,
           message: 'Invalid email or password'
         }
       }
 
+      console.log('✅ Password verified successfully')
+
       // Create new session
+      console.log('Creating session...')
       const token = generateToken()
       const expiresAt = new Date()
       expiresAt.setDate(expiresAt.getDate() + 30) // 30 days
 
-      await blink.db.userSessions.create({
+      const sessionData = {
         id: 'session_' + crypto.randomUUID().replace(/-/g, ''),
         user_id: user.id,
         token,
         expires_at: expiresAt.toISOString(),
         created_at: new Date().toISOString()
-      })
+      }
+      console.log('Session data:', sessionData)
+
+      await blink.db.userSessions.create(sessionData)
+      console.log('✅ Session created')
 
       // Store token
       localStorage.setItem('nightstay_token', token)
+      console.log('✅ Token stored in localStorage')
 
       // Update last login
+      console.log('Updating last login...')
       await blink.db.users.update(user.id, {
         last_login: new Date().toISOString()
       })
+      console.log('✅ Last login updated')
 
       // Set current user
+      console.log('Setting current user...')
       this.currentUser = {
         id: user.id,
         email: user.email,
@@ -309,9 +334,13 @@ class CustomAuthService {
         updatedAt: user.updated_at || user.updatedAt
       }
       this.currentToken = token
+      console.log('✅ Current user set:', this.currentUser)
 
+      console.log('Notifying listeners...')
       this.notifyListeners()
+      console.log('✅ Listeners notified')
 
+      console.log('=== SIGNIN DEBUG END ===')
       return {
         success: true,
         user: this.currentUser,
@@ -319,7 +348,12 @@ class CustomAuthService {
         message: 'Signed in successfully'
       }
     } catch (error) {
-      console.error('Sign in error:', error)
+      console.error('❌ Sign in error:', error)
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      })
       return {
         success: false,
         message: 'Failed to sign in. Please try again.'

@@ -25,22 +25,31 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
-      console.log('Attempting sign in with:', formData.email)
+      console.log('=== FORM SUBMIT START ===')
+      console.log('Form data:', formData)
+      console.log('Attempting sign in with email:', formData.email)
+      console.log('Password length:', formData.password.length)
       
       const result = await signIn({
         email: formData.email,
         password: formData.password
       });
 
-      console.log('Sign in result:', result)
+      console.log('=== SIGN IN RESULT ===')
+      console.log('Full result:', result)
+      console.log('Success:', result.success)
+      console.log('Message:', result.message)
+      console.log('User:', result.user)
 
       if (result.success) {
+        console.log('✅ Sign in successful, navigating to:', getDefaultRoute())
         toast({
           title: "Welcome back!",
           description: result.message || "You've been signed in successfully.",
         });
         navigate(getDefaultRoute());
       } else {
+        console.log('❌ Sign in failed:', result.message)
         toast({
           title: "Sign In Failed",
           description: result.message || "Please check your credentials and try again.",
@@ -48,7 +57,9 @@ const SignIn = () => {
         });
       }
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('❌ Sign in error caught in component:', error);
+      console.error('Error type:', typeof error)
+      console.error('Error constructor:', error.constructor.name)
       toast({
         title: "Sign In Failed",
         description: "Please try again or contact support.",
@@ -56,6 +67,7 @@ const SignIn = () => {
       });
     } finally {
       setIsLoading(false);
+      console.log('=== FORM SUBMIT END ===')
     }
   };
 
