@@ -82,14 +82,14 @@ class CustomAuthService {
       const session = sessions[0]
       
       // Check if session is expired
-      if (new Date(session.expiresAt) < new Date()) {
+      if (new Date(session.expires_at || session.expiresAt) < new Date()) {
         await blink.db.userSessions.delete(session.id)
         return null
       }
 
       // Get user data
       const users = await blink.db.users.list({
-        where: { id: session.userId },
+        where: { id: session.user_id || session.userId },
         limit: 1
       })
 
@@ -101,7 +101,7 @@ class CustomAuthService {
       
       // Update last login
       await blink.db.users.update(user.id, {
-        lastLogin: new Date().toISOString()
+        last_login: new Date().toISOString()
       })
 
       return {
@@ -165,16 +165,16 @@ class CustomAuthService {
       const newUser = await blink.db.users.create({
         id: userId,
         email: data.email,
-        passwordHash,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        password_hash: passwordHash,
+        first_name: data.firstName,
+        last_name: data.lastName,
         phone: data.phone,
         role: data.userType === 'property_owner' ? 'property_owner' : 'guest',
-        isVerified: 0,
-        ageVerified: 0,
-        isActive: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        is_verified: 0,
+        age_verified: 0,
+        is_active: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
 
       // Create session
@@ -184,10 +184,10 @@ class CustomAuthService {
 
       await blink.db.userSessions.create({
         id: 'session_' + crypto.randomUUID().replace(/-/g, ''),
-        userId,
+        user_id: userId,
         token,
-        expiresAt: expiresAt.toISOString(),
-        createdAt: new Date().toISOString()
+        expires_at: expiresAt.toISOString(),
+        created_at: new Date().toISOString()
       })
 
       // Store token
@@ -245,7 +245,7 @@ class CustomAuthService {
       const user = users[0]
 
       // Check if account is active
-      if (Number(user.isActive) === 0) {
+      if (Number(user.is_active || user.isActive) === 0) {
         return {
           success: false,
           message: 'Account is deactivated. Please contact support.'
@@ -254,7 +254,7 @@ class CustomAuthService {
 
       // Verify password
       const passwordHash = await hashPassword(data.password)
-      if (passwordHash !== user.passwordHash) {
+      if (passwordHash !== (user.password_hash || user.passwordHash)) {
         return {
           success: false,
           message: 'Invalid email or password'
@@ -268,10 +268,10 @@ class CustomAuthService {
 
       await blink.db.userSessions.create({
         id: 'session_' + crypto.randomUUID().replace(/-/g, ''),
-        userId: user.id,
+        user_id: user.id,
         token,
-        expiresAt: expiresAt.toISOString(),
-        createdAt: new Date().toISOString()
+        expires_at: expiresAt.toISOString(),
+        created_at: new Date().toISOString()
       })
 
       // Store token
@@ -279,7 +279,7 @@ class CustomAuthService {
 
       // Update last login
       await blink.db.users.update(user.id, {
-        lastLogin: new Date().toISOString()
+        last_login: new Date().toISOString()
       })
 
       // Set current user
@@ -373,15 +373,15 @@ class CustomAuthService {
 
     try {
       const updatedData: any = {
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       }
 
-      if (updates.firstName) updatedData.firstName = updates.firstName
-      if (updates.lastName) updatedData.lastName = updates.lastName
+      if (updates.firstName) updatedData.first_name = updates.firstName
+      if (updates.lastName) updatedData.last_name = updates.lastName
       if (updates.phone) updatedData.phone = updates.phone
-      if (updates.idDocumentUrl) updatedData.idDocumentUrl = updates.idDocumentUrl
-      if (typeof updates.isVerified === 'boolean') updatedData.isVerified = updates.isVerified ? 1 : 0
-      if (typeof updates.ageVerified === 'boolean') updatedData.ageVerified = updates.ageVerified ? 1 : 0
+      if (updates.idDocumentUrl) updatedData.id_document_url = updates.idDocumentUrl
+      if (typeof updates.isVerified === 'boolean') updatedData.is_verified = updates.isVerified ? 1 : 0
+      if (typeof updates.ageVerified === 'boolean') updatedData.age_verified = updates.ageVerified ? 1 : 0
 
       await blink.db.users.update(this.currentUser.id, updatedData)
 
