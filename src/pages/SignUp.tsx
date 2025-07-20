@@ -5,12 +5,12 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useCustomAuth } from '../hooks/useCustomAuth';
 import { useToast } from '../hooks/use-toast';
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signUp, getDefaultRoute } = useCustomAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -51,8 +51,28 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      // Use Blink authentication for signup
-      login();
+      const result = await signUp({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        userType: formData.userType as 'guest' | 'property_owner'
+      });
+
+      if (result.success) {
+        toast({
+          title: "Welcome to NightStay.ai!",
+          description: result.message || "Your account has been created successfully.",
+        });
+        navigate(getDefaultRoute());
+      } else {
+        toast({
+          title: "Sign Up Failed",
+          description: result.message || "Please try again or contact support.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Sign up error:', error);
       toast({
@@ -60,21 +80,16 @@ const SignUp = () => {
         description: "Please try again or contact support.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleSocialLogin = () => {
-    try {
-      login();
-    } catch (error) {
-      console.error('Social login error:', error);
-      toast({
-        title: "Sign Up Failed",
-        description: "Please try again or contact support.",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Coming Soon",
+      description: "Social login will be available soon!",
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

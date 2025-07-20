@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { useAuth } from '../hooks/useAuth';
+import { useCustomAuth } from '../hooks/useCustomAuth';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popove
 import { MapPin, Shield, Clock, Star, Users, TrendingUp, Search, Calendar as CalendarIcon, Wifi, Car, Coffee, Tv, Bath, Bed } from 'lucide-react';
 
 const LandingPage = () => {
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, signOut, getDefaultRoute } = useCustomAuth();
   const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
@@ -22,19 +22,7 @@ const LandingPage = () => {
   // Handle navigation to appropriate dashboard
   const handleDashboardNavigation = () => {
     if (!user) return;
-    
-    switch (user.role) {
-      case 'super_admin':
-        navigate('/super-admin');
-        break;
-      case 'property_owner':
-        navigate('/owner-dashboard');
-        break;
-      case 'guest':
-      default:
-        navigate('/user-dashboard');
-        break;
-    }
+    navigate(getDefaultRoute());
   };
 
   // Sample property data
@@ -120,7 +108,7 @@ const LandingPage = () => {
                   <Button 
                     variant="outline" 
                     className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                    onClick={() => logout('/')}
+                    onClick={() => signOut()}
                   >
                     Sign Out
                   </Button>
@@ -130,13 +118,13 @@ const LandingPage = () => {
                   <Button 
                     variant="ghost" 
                     className="text-gray-600 hover:text-gray-900"
-                    onClick={() => login('/')}
+                    onClick={() => navigate('/signin')}
                   >
                     Sign In
                   </Button>
                   <Button 
                     className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium"
-                    onClick={() => login('/')}
+                    onClick={() => navigate('/signup')}
                   >
                     Sign Up
                   </Button>
@@ -176,7 +164,7 @@ const LandingPage = () => {
                 <Button 
                   size="lg" 
                   className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3"
-                  onClick={() => login('/')}
+                  onClick={() => navigate('/signup')}
                 >
                   List Your Property
                 </Button>
@@ -491,7 +479,7 @@ const LandingPage = () => {
           <Button 
             size="lg" 
             className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3"
-            onClick={isAuthenticated ? handleDashboardNavigation : () => login('/')}
+            onClick={isAuthenticated ? handleDashboardNavigation : () => navigate('/signup')}
           >
             {isAuthenticated ? 'Go to Dashboard' : 'Get Started Today'}
           </Button>

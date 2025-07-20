@@ -5,12 +5,12 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useCustomAuth } from '../hooks/useCustomAuth';
 import { useToast } from '../hooks/use-toast';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signIn, getDefaultRoute } = useCustomAuth();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,8 +25,24 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
-      // Use Blink authentication
-      login();
+      const result = await signIn({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (result.success) {
+        toast({
+          title: "Welcome back!",
+          description: result.message || "You've been signed in successfully.",
+        });
+        navigate(getDefaultRoute());
+      } else {
+        toast({
+          title: "Sign In Failed",
+          description: result.message || "Please check your credentials and try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Sign in error:', error);
       toast({
@@ -34,21 +50,16 @@ const SignIn = () => {
         description: "Please try again or contact support.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleSocialLogin = () => {
-    try {
-      login();
-    } catch (error) {
-      console.error('Social login error:', error);
-      toast({
-        title: "Sign In Failed",
-        description: "Please try again or contact support.",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Coming Soon",
+      description: "Social login will be available soon!",
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

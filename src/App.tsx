@@ -1,8 +1,10 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from './components/ui/toaster'
-import { useAuth } from './hooks/useAuth'
+import { useCustomAuth } from './hooks/useCustomAuth'
 import LandingPage from './pages/LandingPage'
+import SignIn from './pages/SignIn'
+import SignUp from './pages/SignUp'
 import PropertyOwnerDashboard from './pages/PropertyOwnerDashboard'
 import UserBookingDashboard from './pages/UserBookingDashboard'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
@@ -18,7 +20,7 @@ function ProtectedRoute({
   requiredRole?: 'guest' | 'property_owner' | 'super_admin'
   redirectTo?: string 
 }) {
-  const { isLoading, isAuthenticated, hasRole } = useAuth()
+  const { isLoading, isAuthenticated, hasRole } = useCustomAuth()
 
   if (isLoading) {
     return (
@@ -40,7 +42,7 @@ function ProtectedRoute({
 }
 
 function App() {
-  const { isLoading } = useAuth()
+  const { isLoading } = useCustomAuth()
 
   if (isLoading) {
     return (
@@ -59,6 +61,8 @@ function App() {
         <Routes>
           {/* Public Routes - Always accessible */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
           
           {/* Protected Routes */}
           <Route 

@@ -2,7 +2,7 @@ import { createClient } from '@blinkdotnew/sdk'
 
 export const blink = createClient({
   projectId: 'nightstay-ai-booking-platform-h50gdg5j',
-  authRequired: true
+  authRequired: false
 })
 
 // Export individual services for convenience
