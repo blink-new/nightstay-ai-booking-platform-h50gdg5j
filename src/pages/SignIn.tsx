@@ -25,10 +25,14 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting sign in with:', formData.email)
+      
       const result = await signIn({
         email: formData.email,
         password: formData.password
       });
+
+      console.log('Sign in result:', result)
 
       if (result.success) {
         toast({

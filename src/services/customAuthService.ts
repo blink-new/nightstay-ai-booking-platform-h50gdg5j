@@ -229,13 +229,18 @@ class CustomAuthService {
 
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
+      console.log('SignIn attempt:', data.email)
+      
       // Find user by email
       const users = await blink.db.users.list({
         where: { email: data.email },
         limit: 1
       })
 
+      console.log('Found users:', users.length)
+      
       if (users.length === 0) {
+        console.log('No user found with email:', data.email)
         return {
           success: false,
           message: 'Invalid email or password'
@@ -243,6 +248,7 @@ class CustomAuthService {
       }
 
       const user = users[0]
+      console.log('User found:', user.email, 'Role:', user.role)
 
       // Check if account is active
       if (Number(user.is_active || user.isActive) === 0) {
@@ -254,7 +260,12 @@ class CustomAuthService {
 
       // Verify password
       const passwordHash = await hashPassword(data.password)
+      console.log('Generated hash:', passwordHash)
+      console.log('Stored hash:', user.password_hash || user.passwordHash)
+      console.log('Password match:', passwordHash === (user.password_hash || user.passwordHash))
+      
       if (passwordHash !== (user.password_hash || user.passwordHash)) {
+        console.log('Password verification failed')
         return {
           success: false,
           message: 'Invalid email or password'
