@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { useAuth } from '../hooks/useAuth';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -10,11 +11,31 @@ import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popove
 import { MapPin, Shield, Clock, Star, Users, TrendingUp, Search, Calendar as CalendarIcon, Wifi, Car, Coffee, Tv, Bath, Bed } from 'lucide-react';
 
 const LandingPage = () => {
+  const { isAuthenticated, user, login, logout } = useAuth();
+  const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
   const [location, setLocation] = useState('');
   const [guests, setGuests] = useState('1');
   const [stayType, setStayType] = useState('daily');
+
+  // Handle navigation to appropriate dashboard
+  const handleDashboardNavigation = () => {
+    if (!user) return;
+    
+    switch (user.role) {
+      case 'super_admin':
+        navigate('/super-admin');
+        break;
+      case 'property_owner':
+        navigate('/owner-dashboard');
+        break;
+      case 'guest':
+      default:
+        navigate('/user-dashboard');
+        break;
+    }
+  };
 
   // Sample property data
   const sampleProperties = [
@@ -84,16 +105,43 @@ const LandingPage = () => {
 
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
-              <Link to="/signin">
-                <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/signup">
-                <Button className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium">
-                  Sign Up
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <span className="text-sm text-gray-600">
+                    Welcome, {user?.displayName || user?.email || 'User'}!
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    className="text-gray-600 hover:text-gray-900"
+                    onClick={handleDashboardNavigation}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    onClick={() => logout('/')}
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    className="text-gray-600 hover:text-gray-900"
+                    onClick={() => login('/')}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium"
+                    onClick={() => login('/')}
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -116,11 +164,23 @@ const LandingPage = () => {
               Built for simplicity, powered by AI.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/signup">
-                <Button size="lg" className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3">
+              {isAuthenticated ? (
+                <Button 
+                  size="lg" 
+                  className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3"
+                  onClick={handleDashboardNavigation}
+                >
+                  Go to Dashboard
+                </Button>
+              ) : (
+                <Button 
+                  size="lg" 
+                  className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3"
+                  onClick={() => login('/')}
+                >
                   List Your Property
                 </Button>
-              </Link>
+              )}
               <Button 
                 size="lg" 
                 variant="outline" 
@@ -428,8 +488,12 @@ const LandingPage = () => {
           <p className="text-xl text-gray-600 mb-8">
             Join independent property owners who are already growing their business with NightStay.ai
           </p>
-          <Button size="lg" className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3">
-            Get Started Today
+          <Button 
+            size="lg" 
+            className="bg-[#8EE0A1] hover:bg-[#7DD492] text-gray-900 font-medium px-8 py-3"
+            onClick={isAuthenticated ? handleDashboardNavigation : () => login('/')}
+          >
+            {isAuthenticated ? 'Go to Dashboard' : 'Get Started Today'}
           </Button>
         </div>
       </section>
