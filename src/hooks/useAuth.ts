@@ -31,7 +31,17 @@ export function useAuth() {
       if (state.user) {
         try {
           // Get full user profile with role information
-          const userProfile = await AuthService.getCurrentUserProfile()
+          let userProfile = await AuthService.getCurrentUserProfile()
+          
+          // If no profile exists, initialize one
+          if (!userProfile && state.user.email) {
+            userProfile = await AuthService.initializeUserProfile({
+              email: state.user.email,
+              displayName: state.user.displayName,
+              role: 'guest' // Default role
+            })
+          }
+          
           if (userProfile) {
             setAuthState({
               user: userProfile,

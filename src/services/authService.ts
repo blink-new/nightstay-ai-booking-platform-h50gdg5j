@@ -7,7 +7,7 @@ export class AuthService {
     email: string
     displayName?: string
     role?: 'guest' | 'property_owner' | 'super_admin'
-  }) {
+  } = {}) {
     try {
       const user = await blink.auth.me()
       
@@ -55,8 +55,8 @@ export class AuthService {
       // Create new user profile
       await blink.db.users.create({
         id: user.id,
-        email: userData.email,
-        displayName: userData.displayName || user.email?.split('@')[0],
+        email: userData.email || user.email,
+        displayName: userData.displayName || user.displayName || user.email?.split('@')[0],
         role: userData.role || 'guest',
         isVerified: false,
         createdAt: new Date().toISOString(),

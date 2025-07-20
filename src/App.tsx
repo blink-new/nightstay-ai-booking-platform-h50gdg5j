@@ -40,7 +40,7 @@ function ProtectedRoute({
 }
 
 function App() {
-  const { isLoading } = useAuth()
+  const { isLoading, isAuthenticated, user } = useAuth()
 
   if (isLoading) {
     return (
@@ -53,12 +53,34 @@ function App() {
     )
   }
 
+  // Auto-redirect authenticated users to their appropriate dashboard
+  const getDefaultRoute = () => {
+    if (!isAuthenticated || !user) return "/"
+    
+    switch (user.role) {
+      case 'super_admin':
+        return "/super-admin"
+      case 'property_owner':
+        return "/owner-dashboard"
+      case 'guest':
+      default:
+        return "/user-dashboard"
+    }
+  }
+
   return (
     <Router>
       <div className="min-h-screen bg-white">
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route 
+            path="/" 
+            element={
+              isAuthenticated ? 
+                <Navigate to={getDefaultRoute()} replace /> : 
+                <LandingPage />
+            } 
+          />
           
           {/* Protected Routes */}
           <Route 
